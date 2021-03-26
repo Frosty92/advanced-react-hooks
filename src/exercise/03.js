@@ -12,17 +12,26 @@ const CountProvider = ({children, ...props}) => {
   console.log("rest of props:", props);
   return <CountContext.Provider value={[count, setCount]} {...props}>
     {children}
-    <h3>Message is: {props.message}</h3>
   </CountContext.Provider>
 }
 
+
+const useCount = () => {
+
+  const countextState = React.useContext(CountContext);
+  if (typeof countextState === "undefined") {
+    throw new Error('UseCount must be used within the countext of CountProvider');
+  }
+  return countextState;
+}
+
 function CountDisplay() {
-  const [count] = React.useContext(CountContext);
+  const [count] = useCount();
   return <div>{`The current count is ${count}`}</div>
 }
 
 function Counter() {
-  const [,setCount] = React.useContext(CountContext);
+  const [,setCount] = useCount();
   const increment = () => setCount(c => c + 1)
   return <button onClick={increment}>Increment count</button>
 }
