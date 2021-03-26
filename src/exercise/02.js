@@ -30,17 +30,30 @@ function asyncReducer(state, action) {
 
 
 const useAsync = (initialState) => {
-  const [state, dispatch] = React.useReducer(asyncReducer, {
+  const [state, unsafeDispatch] = React.useReducer(asyncReducer, {
     status:'pending',
     data:null,
     error:null,
     ...initialState
   });
 
+  const mountRef = React.useRef(false);
+  React.useEffect(() => {
+    mountRef.current= true;
+    return (() => {
+      mountRef.current = false;
+    });
+  }, []);
+
+  const safeDispatch = React.useCallback((...args) => {
+    if (mountRef.current) unsafeDispatch(...args);
+    
+  }, []);
+
   const run = React.useCallback((asyncCallback) => {
-    dispatch({type:'pending'});
-    asyncCallback.then((data) => dispatch({type:'resolved', data}))
-    .catch((error) => dispatch({type:'rejected', error}));
+    safeDispatch({type:'pending'});
+    asyncCallback.then((data) => safeDispatch({type:'resolved', data}))
+    .catch((error) => safeDispatch({type:'rejected', error}));
   }, []);
 
   return {...state, run};
